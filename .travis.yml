@@ -5,5 +5,5 @@ install:
   - pip install pipenv
   - pipenv install --dev
 script:
-  - piipenv run pylynt wsgi.py
+  - pipenv run pylynt wsgi.py
   - pipenv run nosetests
