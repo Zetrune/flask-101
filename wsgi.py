@@ -5,8 +5,7 @@ from flask import Flask, jsonify, make_response, abort
 app = Flask(__name__)
 
 INITIAL_PRODUCTS = [
- {"id": 0, "name": "lequipe.fr"},
-    {"id": 1, "name": "lequipe.fr"},
+    {"id": 1, "name": "Skello"},
     {"id": 2, "name": "Socialive.tv"},
     {"id": 3, "name": "lemonde.fr"}
 ]
