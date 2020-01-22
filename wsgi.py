@@ -1,6 +1,7 @@
 # pylint: disable=missing-docstring
-
 from flask import Flask, jsonify, make_response
+import sys
+
 app = Flask(__name__)
 
 PRODUCTS = [
@@ -13,14 +14,17 @@ PRODUCTS = [
 def get_product_list():
     return jsonify(PRODUCTS)
 
-@app.route("/api/v1/products/<int:id>")
+@app.route("/api/v1/products/<int:product_id>")
 def get_product(product_id):
-    if product_id in PRODUCTS:
-        product = PRODUCTS[product_id]
-        status = 200
-    else:
-        product = {}
+    if product_id == 0 or product_id > len(PRODUCTS):
+        app.logger.info(f"product ID [{product_id}] does not exist in PRODUCTS")
+        product = None
         status = 404
+    else:
+        product_index = product_id - 1
+        product = PRODUCTS[product_index]
+        app.logger.info(f"product ID [{product_id}] exist in PRODUCTS")
+        status = 200
     response = make_response(jsonify(product), status)
     return response
 
