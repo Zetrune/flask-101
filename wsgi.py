@@ -12,34 +12,30 @@ INITIAL_PRODUCTS = [
 
 PRODUCTS = deepcopy(INITIAL_PRODUCTS)
 
-@app.route('/')
-def hello():
-    return "Hello World!"
-
-@app.route("/api/v1/products")
-def get_product_list():
-    return jsonify(PRODUCTS)
-
 def init_product_list():
     global PRODUCTS
     PRODUCTS = deepcopy(INITIAL_PRODUCTS)
 
 def product_exist(product_id):
     if product_id == 0 or product_id > len(PRODUCTS):
-        app.logger.error(f"product ID [{product_id}] does not exist in PRODUCTS - Incorrect index")
         return False
     product = PRODUCTS[product_id - 1]
-    app.logger.info(product)
     if product["name"] is None:
-        app.logger.error(f"product ID [{product_id}] does not exist in PRODUCTS - None value")
+        return False
+    return True
+
+def valid_input(product_input_json):
+    if not "name" in product_input_json:
+        return False
+    if product_input_json["name"] == "":
+        return False
+    if product_input_json["name"] is None:
         return False
     return True
 
 def erase_product(product_id):
     product_index = product_id - 1
     product = PRODUCTS[product_index]
-    name = product["name"]
-    app.logger.info(f"Erase product ID [{product_id}] of value [{name}]")
     product["name"] = None
     PRODUCTS[product_index] = product
     return product
@@ -47,27 +43,7 @@ def erase_product(product_id):
 def retrieve_product(product_id):
     product_index = product_id - 1
     product = PRODUCTS[product_index]
-    name = product["name"]
-    app.logger.info(f"Retrieve product ID [{product_id}] of value [{name}]")
     return product
-
-@app.route("/api/v1/products/<int:product_id>", methods=['GET'])
-def get_product(product_id):
-    if not product_exist(product_id):
-        app.logger.error(f"Unable to GET product ID [{product_id}]")
-        abort(404)
-    product = retrieve_product(product_id)
-    app.logger.info(f"product ID [{product_id}] exist in PRODUCTS")
-    return make_response(jsonify(product), 200)
-
-@app.route("/api/v1/products/<int:product_id>", methods=['DELETE'])
-def delete_product(product_id):
-    if not product_exist(product_id):
-        app.logger.error(f"Unable to DELETE product ID [{product_id}]")
-        abort(404)
-    erase_product(product_id)
-    app.logger.info(f"product ID [{product_id}] has been deleted from PRODUCTS")
-    return make_response("", 204)
 
 def get_empty_id():
     nb_product = len(PRODUCTS)
@@ -87,5 +63,39 @@ def create_product():
     target_id = get_empty_id()
     new_product = {"id": target_id, "name": target_name}
     PRODUCTS.insert(target_id - 1, new_product)
-    app.logger.info(f"product ID [{target_id}] has been created with value [{target_name}]")
     return make_response(jsonify(target_id), 201)
+
+@app.route("/api/v1/products/<int:product_id>", methods=['PATCH'])
+def update_product(product_id):
+    body_json = request.get_json()
+    if not product_exist(product_id):
+        abort(422)
+    if not valid_input(body_json):
+        abort(422)
+    target_name = body_json["name"]
+    product = PRODUCTS[product_id - 1]
+    product["name"] = target_name
+    PRODUCTS[product_id - 1] = product
+    return make_response("", 204)
+
+@app.route("/api/v1/products/<int:product_id>", methods=['GET'])
+def get_product(product_id):
+    if not product_exist(product_id):
+        abort(404)
+    product = retrieve_product(product_id)
+    return make_response(jsonify(product), 200)
+
+@app.route("/api/v1/products/<int:product_id>", methods=['DELETE'])
+def delete_product(product_id):
+    if not product_exist(product_id):
+        abort(404)
+    erase_product(product_id)
+    return make_response("", 204)
+
+@app.route("/api/v1/products")
+def get_product_list():
+    return jsonify(PRODUCTS)
+
+@app.route('/')
+def hello():
+    return "Hello World!"

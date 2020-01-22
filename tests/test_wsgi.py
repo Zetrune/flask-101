@@ -112,3 +112,33 @@ class TestViews(TestCase):
         product_list = response.json
         nb_product_after_add = len(product_list)
         self.assertEqual(nb_product_after_add, nb_product_before_add + 1)
+
+    def test_update_product(self):
+        response = self.client.get("/api/v1/products/1")
+        initial_product = response.json
+        status_code = response.status_code
+        self.assertIsInstance(initial_product, dict)
+        self.assertEqual(status_code, 200)
+        self.assertEqual(initial_product["name"], "Skello")
+        payload = {"name": "Workelo"}
+        response = self.client.patch("/api/v1/products/1", json=payload)
+        status_code = response.status_code
+        self.assertEqual(status_code, 204)
+        response = self.client.get("/api/v1/products/1")
+        updated_product = response.json
+        status_code = response.status_code
+        self.assertIsInstance(updated_product, dict)
+        self.assertEqual(status_code, 200)
+        self.assertEqual(updated_product["name"], "Workelo")
+
+    def test_update_empty_product(self):
+        payload = {"name": ""}
+        response = self.client.patch("/api/v1/products/1", json=payload)
+        status_code = response.status_code
+        self.assertEqual(status_code, 422)
+        response = self.client.get("/api/v1/products/1")
+        updated_product = response.json
+        status_code = response.status_code
+        self.assertIsInstance(updated_product, dict)
+        self.assertEqual(status_code, 200)
+        self.assertEqual(updated_product["name"], "Skello")
